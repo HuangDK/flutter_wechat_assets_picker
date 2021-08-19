@@ -239,29 +239,36 @@ class DefaultAssetPickerProvider
     extends AssetPickerProvider<AssetEntity, AssetPathEntity> {
   /// Call [getAssetList] with route duration when constructing.
   /// 构造时根据路由时长延时获取资源
-  DefaultAssetPickerProvider({
-    List<AssetEntity>? selectedAssets,
-    this.requestType = RequestType.image,
-    this.sortPathDelegate = SortPathDelegate.common,
-    this.filterOptions,
-    int maxAssets = 9,
-    int pageSize = 80,
-    int pathThumbSize = 80,
-    Duration routeDuration = const Duration(milliseconds: 300),
-  }) : super(
+  DefaultAssetPickerProvider(
+      {List<AssetEntity>? selectedAssets,
+      this.requestType = RequestType.image,
+      this.sortPathDelegate = SortPathDelegate.common,
+      this.filterOptions,
+      int maxAssets = 9,
+      int pageSize = 80,
+      int pathThumbSize = 80,
+      Duration routeDuration = const Duration(milliseconds: 300),
+      this.initialPermission = PermissionState.denied})
+      : super(
           maxAssets: maxAssets,
           pageSize: pageSize,
           pathThumbSize: pathThumbSize,
           selectedAssets: selectedAssets,
         ) {
     Constants.sortPathDelegate = sortPathDelegate ?? SortPathDelegate.common;
+
     Future<void>.delayed(routeDuration).then(
       (dynamic _) async {
-        await getAssetPathList();
-        await getAssetList();
+        if (initialPermission == PermissionState.authorized ||
+            initialPermission == PermissionState.limited) {
+          await getAssetPathList();
+          await getAssetList();
+        }
       },
     );
   }
+
+  final PermissionState initialPermission;
 
   /// Request assets type.
   /// 请求的资源类型
@@ -280,6 +287,7 @@ class DefaultAssetPickerProvider
 
   @override
   Future<void> getAssetPathList() async {
+    _pathEntityList.clear();
     // Initial base options.
     // Enable need title for audios and image to get proper display.
     final FilterOptionGroup options = FilterOptionGroup(
@@ -320,7 +328,7 @@ class DefaultAssetPickerProvider
 
     // Set first path entity as current path entity.
     if (_pathEntityList.isNotEmpty) {
-      _currentPathEntity ??= pathEntityList.keys.elementAt(0);
+      _currentPathEntity = pathEntityList.keys.elementAt(0);
     }
   }
 

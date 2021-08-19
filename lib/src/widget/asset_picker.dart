@@ -18,9 +18,6 @@ class AssetPicker<Asset, Path> extends StatefulWidget {
 
   static Future<PermissionState> permissionCheck() async {
     final PermissionState _ps = await PhotoManager.requestPermissionExtend();
-    if (_ps != PermissionState.authorized && _ps != PermissionState.limited) {
-      throw StateError('Permission state error with $_ps.');
-    }
     return _ps;
   }
 
@@ -91,6 +88,7 @@ class AssetPicker<Asset, Path> extends StatefulWidget {
       sortPathDelegate: sortPathDelegate,
       filterOptions: filterOptions,
       routeDuration: routeDuration,
+      initialPermission: _ps,
     );
     final Widget picker =
         ChangeNotifierProvider<DefaultAssetPickerProvider>.value(

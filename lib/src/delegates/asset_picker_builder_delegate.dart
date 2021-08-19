@@ -174,6 +174,10 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
   /// 当前的权限是否为受限
   bool get isPermissionLimited => permission.value == PermissionState.limited;
 
+  /// Whether the permission is denied currently.
+  /// 当前的权限是否为拒绝
+  bool get isPermissionDenied => permission.value == PermissionState.denied;
+
   /// The listener to track the scroll position of the [gridScrollController]
   /// if [keepScrollOffset] is true.
   /// 当 [keepScrollOffset] 为 true 时，跟踪 [gridScrollController] 位置的监听。
@@ -509,19 +513,19 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
       ),
     );
 
-    final Widget _limitedTips = Padding(
+    final Widget _refTips = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           ScaleText(
-            Constants.textDelegate.unableToAccessAll,
+            Constants.textDelegate.unableToAccess,
             style: const TextStyle(fontSize: 22),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: size.height / 30),
           ScaleText(
-            Constants.textDelegate.accessAllTip,
+            Constants.textDelegate.accessAssetsTip,
             style: const TextStyle(fontSize: 18),
             textAlign: TextAlign.center,
           ),
@@ -568,10 +572,10 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
             child: Column(
               children: <Widget>[
                 _closeButton,
-                Expanded(child: _limitedTips),
+                Expanded(child: _refTips),
                 _goToSettingsButton,
                 SizedBox(height: size.height / 18),
-                _accessLimitedButton,
+                // _accessLimitedButton,
               ],
             ),
           ),
@@ -606,7 +610,8 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
               children: <Widget>[
                 if (isAppleOS) appleOSLayout(c) else androidLayout(c),
                 // hidden Overlay
-                /// if (Platform.isIOS) iOSPermissionOverlay(c),
+                if (Platform.isIOS && isPermissionDenied)
+                  iOSPermissionOverlay(c),
               ],
             ),
           ),
@@ -768,6 +773,9 @@ class DefaultAssetPickerBuilderDelegate
 
   @override
   Widget appleOSLayout(BuildContext context) {
+    if (isPermissionDenied) {
+      return Container();
+    }
     return Stack(
       children: <Widget>[
         Positioned.fill(
@@ -834,7 +842,7 @@ class DefaultAssetPickerBuilderDelegate
           placeholderCount = 0;
         }
         // Calculate rows count.
-        final int row = (totalCount + placeholderCount) ~/ gridCount;
+        final int row = totalCount ~/ gridCount;
         // Here we got a magic calculation. [itemSpacing] needs to be divided by
         // [gridCount] since every grid item is squeezed by the [itemSpacing],
         // and it's actual size is reduced with [itemSpacing / gridCount].
@@ -846,12 +854,12 @@ class DefaultAssetPickerBuilderDelegate
             delegate: SliverChildBuilderDelegate(
               (_, int index) => Builder(
                 builder: (BuildContext c) {
-                  if (isAppleOS) {
-                    if (index < placeholderCount) {
-                      return const SizedBox.shrink();
-                    }
-                    index -= placeholderCount;
-                  }
+                  // if (isAppleOS) {
+                  //   if (index < placeholderCount) {
+                  //     return const SizedBox.shrink();
+                  //   }
+                  //   index -= placeholderCount;
+                  // }
                   return Directionality(
                     textDirection: Directionality.of(context),
                     child: assetGridItemBuilder(c, index, assets),
@@ -861,14 +869,14 @@ class DefaultAssetPickerBuilderDelegate
               childCount: assetsGridItemCount(
                 context: ctx,
                 assets: assets,
-                placeholderCount: placeholderCount,
+                // placeholderCount: placeholderCount,
               ),
               findChildIndexCallback: (Key? key) {
                 if (key is ValueKey<String>) {
                   return findChildIndexBuilder(
                     id: key.value,
                     assets: assets,
-                    placeholderCount: placeholderCount,
+                    // placeholderCount: placeholderCount,
                   );
                 }
                 return null;
@@ -908,34 +916,32 @@ class DefaultAssetPickerBuilderDelegate
               1,
             );
 
-            return Directionality(
-              textDirection: effectiveGridDirection(context),
-              child: ColoredBox(
-                color: theme.canvasColor,
-                child: Selector<DefaultAssetPickerProvider, List<AssetEntity>>(
-                  selector: (_, DefaultAssetPickerProvider provider) =>
-                      provider.currentAssets,
-                  builder: (_, List<AssetEntity> assets, __) =>
-                      CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    controller: gridScrollController,
-                    anchor: isAppleOS ? anchor : 0,
-                    center: isAppleOS ? gridRevertKey : null,
-                    slivers: <Widget>[
-                      if (isAppleOS)
-                        SliverGap.v(context.topPadding + kToolbarHeight),
-                      _sliverGrid(_, assets),
-                      // Ignore the gap when the [anchor] is not equal to 1.
-                      if (isAppleOS && anchor == 1)
-                        SliverGap.v(
-                            context.bottomPadding + bottomSectionHeight),
-                      if (isAppleOS)
-                        SliverToBoxAdapter(
-                          key: gridRevertKey,
-                          child: const SizedBox.shrink(),
-                        ),
-                    ],
-                  ),
+            return ColoredBox(
+              color: theme.canvasColor,
+              child: Selector<DefaultAssetPickerProvider, List<AssetEntity>>(
+                selector: (_, DefaultAssetPickerProvider provider) =>
+                    provider.currentAssets,
+                builder: (_, List<AssetEntity> assets, __) =>
+                    CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  // controller: gridScrollController,
+                  // anchor: isAppleOS ? anchor : 0,
+                  // center: isAppleOS ? gridRevertKey : null,
+                  // reverse: true,
+                  slivers: <Widget>[
+                    if (isAppleOS)
+                      SliverGap.v(context.topPadding + kToolbarHeight),
+                    _sliverGrid(_, assets),
+                    // Ignore the gap when the [anchor] is not equal to 1.
+                    if (isAppleOS && anchor == 1)
+                      SliverGap.v(
+                          context.bottomPadding + bottomSectionHeight),
+                    if (isAppleOS)
+                      SliverToBoxAdapter(
+                        key: gridRevertKey,
+                        child: const SizedBox.shrink(),
+                      ),
+                  ],
                 ),
               ),
             );

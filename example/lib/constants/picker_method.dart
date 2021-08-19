@@ -78,6 +78,7 @@ class PickMethod {
           maxAssets: maxAssetsCount,
           selectedAssets: assets,
           requestType: RequestType.common,
+          allowSpecialItemWhenEmpty: true,
           specialItemPosition: SpecialItemPosition.prepend,
           specialItemBuilder: (BuildContext context) {
             return GestureDetector(
