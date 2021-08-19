@@ -828,8 +828,7 @@ class DefaultAssetPickerBuilderDelegate
         int totalCount = path?.assetCount ?? 0;
         // If user chose a special item's position, add 1 count.
         if (specialItemPosition != SpecialItemPosition.none &&
-            path?.isAll == true &&
-            isPermissionLimited) {
+            path?.isAll == true) {
           totalCount += 1;
         }
         // Then we use the [totalCount] to calculate how many placeholders we need.
@@ -924,7 +923,7 @@ class DefaultAssetPickerBuilderDelegate
                     provider.currentAssets,
                 builder: (_, List<AssetEntity> assets, __) => CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  // controller: gridScrollController,
+                  controller: gridScrollController,
                   // anchor: isAppleOS ? anchor : 0,
                   // center: isAppleOS ? gridRevertKey : null,
                   // reverse: true,
@@ -992,8 +991,7 @@ class DefaultAssetPickerBuilderDelegate
     // Directly return the special item when it's empty.
     if (currentPathEntity == null) {
       if (allowSpecialItemWhenEmpty &&
-          specialItemPosition != SpecialItemPosition.none &&
-          isPermissionLimited) {
+          specialItemPosition != SpecialItemPosition.none) {
         return specialItemBuilder!(context);
       }
       return const SizedBox.shrink();
@@ -1004,8 +1002,7 @@ class DefaultAssetPickerBuilderDelegate
         specialItemPosition != SpecialItemPosition.none) {
       if ((index == 0 && specialItemPosition == SpecialItemPosition.prepend) ||
           (index == _length &&
-                  specialItemPosition == SpecialItemPosition.append) &&
-              isPermissionLimited) {
+              specialItemPosition == SpecialItemPosition.append)) {
         return specialItemBuilder!(context);
       }
     }
