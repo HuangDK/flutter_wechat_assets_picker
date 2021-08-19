@@ -828,7 +828,8 @@ class DefaultAssetPickerBuilderDelegate
         int totalCount = path?.assetCount ?? 0;
         // If user chose a special item's position, add 1 count.
         if (specialItemPosition != SpecialItemPosition.none &&
-            path?.isAll == true) {
+            path?.isAll == true &&
+            isPermissionLimited) {
           totalCount += 1;
         }
         // Then we use the [totalCount] to calculate how many placeholders we need.
@@ -921,8 +922,7 @@ class DefaultAssetPickerBuilderDelegate
               child: Selector<DefaultAssetPickerProvider, List<AssetEntity>>(
                 selector: (_, DefaultAssetPickerProvider provider) =>
                     provider.currentAssets,
-                builder: (_, List<AssetEntity> assets, __) =>
-                    CustomScrollView(
+                builder: (_, List<AssetEntity> assets, __) => CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   // controller: gridScrollController,
                   // anchor: isAppleOS ? anchor : 0,
@@ -934,8 +934,7 @@ class DefaultAssetPickerBuilderDelegate
                     _sliverGrid(_, assets),
                     // Ignore the gap when the [anchor] is not equal to 1.
                     if (isAppleOS && anchor == 1)
-                      SliverGap.v(
-                          context.bottomPadding + bottomSectionHeight),
+                      SliverGap.v(context.bottomPadding + bottomSectionHeight),
                     if (isAppleOS)
                       SliverToBoxAdapter(
                         key: gridRevertKey,
@@ -993,7 +992,8 @@ class DefaultAssetPickerBuilderDelegate
     // Directly return the special item when it's empty.
     if (currentPathEntity == null) {
       if (allowSpecialItemWhenEmpty &&
-          specialItemPosition != SpecialItemPosition.none) {
+          specialItemPosition != SpecialItemPosition.none &&
+          isPermissionLimited) {
         return specialItemBuilder!(context);
       }
       return const SizedBox.shrink();
@@ -1004,7 +1004,8 @@ class DefaultAssetPickerBuilderDelegate
         specialItemPosition != SpecialItemPosition.none) {
       if ((index == 0 && specialItemPosition == SpecialItemPosition.prepend) ||
           (index == _length &&
-              specialItemPosition == SpecialItemPosition.append)) {
+                  specialItemPosition == SpecialItemPosition.append) &&
+              isPermissionLimited) {
         return specialItemBuilder!(context);
       }
     }
