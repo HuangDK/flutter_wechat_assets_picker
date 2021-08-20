@@ -609,8 +609,7 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
               fit: StackFit.expand,
               children: <Widget>[
                 if (isAppleOS) appleOSLayout(c) else androidLayout(c),
-                // hidden Overlay
-                if (Platform.isIOS && isPermissionDenied)
+                if (isPermissionDenied)
                   iOSPermissionOverlay(c),
               ],
             ),
